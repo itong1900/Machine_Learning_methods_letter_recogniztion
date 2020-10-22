@@ -1,0 +1,152 @@
+---
+title: "Letter_Identification"
+author: "Yitong Chen"
+date: "10/21/2020"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE}
+library(ggplot2)
+library(caTools)
+library(plotROC)
+library(ROCR)
+library(rpart) # CART
+library(rpart.plot) # CART plotting
+library(caret) # c
+library(randomForest)
+library(gbm)
+```
+
+
+## 1.1 Simple Intro on is "B"
+To make the problem easier, as well as getting to know the big picture of the data, we'll start by predicting whether or Not the letter is "B"  
+```{r}
+## load the data
+Letters = read.csv("Letters.csv",sep = ",")
+```
+
+#### add an "isB" column on the dataset 
+```{r}
+Letters$isB = as.factor((Letters$letter == "B"))
+```
+
+#### Train Test Split
+Put 65% of the data in the training set and 35% in the test set
+```{r}
+train.ids = sample(nrow(Letters), 0.65* nrow(Letters))
+Letters.train = Letters[train.ids, ]
+Letters.test = Letters[-train.ids, ]
+
+```
+
+#### 1 i) Baseline Model
+This model always predicts "not B", we'll derive its performance in test set
+```{r}
+table(Letters.train$isB)
+Accuracy = sum(Letters.train$isB == FALSE) / nrow(Letters.train)
+table(Letters.test$isB)
+Base_Accuracy = sum(Letters.test$isB == FALSE) / nrow(Letters.test)
+
+paste("The Accuracy of the baseline model:", Base_Accuracy) 
+```
+
+#### 1 ii) Logistic Regression
+A typical logistic regression that include all the variables, threshold is set at $ p = 0.5$
+```{r}
+## remove the letter for training
+log_model = glm(data = subset(Letters.train, select=c(-letter) ), family = "binomial", isB ~.)
+summary(log_model)
+
+## predict on the test set
+pisB <- predict(log_model, newdata = subset(Letters.test, select=c(-letter) ), type = "response")
+pisB = pisB > 0.5
+
+## construct the confusion matrix
+confusion_m <- table(Letters.test$isB, pisB)
+confusion_m
+log_accuracy = (confusion_m[1] + confusion_m[4])/sum(confusion_m)
+paste("The Accuracy of the logistic regression model:", log_accuracy)
+```
+
+We also calculate the AUC of the model
+```{r}
+predTestLog <- predict(log_model, newdata = subset(Letters.test, select=c(-letter) ), type = "response")
+rocr.log.pred <- prediction(predTestLog, Letters.test$isB)
+logPerformance <- performance(rocr.log.pred, "tpr", "fpr")
+plot(logPerformance, colorize = TRUE)
+abline(0, 1)
+
+# AUC
+paste("As calulated, AUC = ",as.numeric(performance(rocr.log.pred, "auc")@y.values))
+```
+
+
+#### 1 iii) CART Model to predict "isB"
+Cross Validation is applied to select the cp(complexity parameter) of the model. 
+```{r}
+## A list of cp value will be test 
+cpVals = data.frame(cp = seq(0, .1, by=.001)) 
+
+train.cart <- train(isB ~ .,
+                    data = subset(Letters.train, select=c(-letter) ),
+                    method = "rpart",
+                    tuneGrid = cpVals,
+                    trControl = trainControl(method = "cv", number=10),
+                    metric = "Accuracy")
+
+Letters.test.mm = as.data.frame(model.matrix(isB~.+0, data=Letters.test))
+
+## a threshold of 0.5 is set for decision
+pred.cart <- predict(train.cart,newdata = Letters.test.mm, type="prob" )
+pred_cart = pred.cart[,2] > 0.5
+
+confusion_m <- table(Letters.test$isB, pred_cart)
+confusion_m
+
+cart_accuracy = (confusion_m[1] + confusion_m[4])/sum(confusion_m)
+paste("The Accuracy of the CART model:", cart_accuracy)
+```
+
+```{r}
+# A cp vs Accuracy to help us on deciding cp
+ggplot(train.cart$results, aes(x=cp, y=Accuracy)) + geom_point(size=3) +
+  xlab("Complexity Parameter (cp)") + geom_line()
+```
+
+
+
+#### 1 iv) Random Forest to predict "isB"
+```{r}
+## train the RF model
+mod.rf <- randomForest(isB ~ .,
+                    data = subset(Letters.train, select=c(-letter)))
+
+pred.rf <- predict(mod.rf, newdata = Letters.test, type = "response") 
+
+confusion_m <- table(Letters.test$isB, pred.rf)
+confusion_m
+rf_accuracy = (confusion_m[1] + confusion_m[4])/sum(confusion_m)
+paste("The Accuracy of the Random Forest :", rf_accuracy)
+```
+
+#### 1 v) Summary
+```{r}
+data.frame(Model = c("Baseline","Logistic Regression","CART","Random Forest"), Accuracy = c(Base_Accuracy, log_accuracy, cart_accuracy, rf_accuracy))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
