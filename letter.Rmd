@@ -19,6 +19,8 @@ library(rpart.plot) # CART plotting
 library(caret) # c
 library(randomForest)
 library(gbm)
+library(GGally)
+library(MASS)
 ```
 
 
@@ -138,13 +140,67 @@ paste("The Accuracy of the Random Forest :", rf_accuracy)
 data.frame(Model = c("Baseline","Logistic Regression","CART","Random Forest"), Accuracy = c(Base_Accuracy, log_accuracy, cart_accuracy, rf_accuracy))
 ```
 
+## 2. Prediction on "A", "B", "P", "R"
+Now, let's move on to a more general case: predicting a letter is one of "A", "B", "P", "R". It can be extended to the full 26 letters case, but this will inflate the model complexity and run time. For the sake of simplicity, we'll run the demo of four letter case here.
+
+#### 2 i) Baseline Model
+```{r}
+table(Letters.train$letter)
+
+table(Letters.test$letter)
+
+## Since "A" appears most frequently in the training set, we'll always predict the "A" in the test set
+Base_Accuracy = sum(Letters.test$letter == "A") / nrow(Letters.test)
+paste("Baseline Model Accuracy = " ,Base_Accuracy) 
+```
 
 
+#### 2 ii) LDA (Latent Dirichlet allocation)
+```{r}
+LdaModel <- lda(letter ~ ., data=subset(Letters.train, select = c(-isB)))
+
+predTestLDA <- predict(LdaModel, newdata = Letters.test)
+
+confusion_m <- table(predTestLDA$class, Letters.test$letter)
+confusion_m
+
+lda_accuracy = sum(predTestLDA$class == Letters.test$letter)/nrow(Letters.test)
+paste("LDA Accuracy:" ,lda_accuracy)
+```
+
+#### 2 iii) CART
+```{r}
+cpVals = data.frame(cp = seq(0, .001, by=.1))
+
+train.cart_2 <- train(letter ~ .,
+                    data = subset(Letters.train, select=c(-isB) ),
+                    method = "rpart",
+                    tuneGrid = cpVals,
+                    trControl = trainControl(method = "cv", number=5),
+                    metric = "Accuracy")
+
+train.cart_2
 
 
+Letters.test.mm = as.data.frame(model.matrix(letter~.+0, data=Letters.test))
+
+pred.cart <- predict(train.cart_2, newdata = Letters.test.mm, type="prob" )
+pred.cart$results = colnames(pred.cart)[apply(pred.cart,1,which.max)]
+
+confusion_m <- table(Letters.test$letter, pred.cart$results)
+confusion_m
+
+cart_accuracy_2 = sum(Letters.test$letter == pred.cart$results)/(nrow(Letters.test))
+paste("CART Accuracy" ,cart_accuracy_2)
+```
 
 
+```{r}
+tree <- rpart(letter ~., data = Letters.train, method = "class")
+rpart.plot(tree)
+```
 
+#### iv Bagging of CART models
 
 
 

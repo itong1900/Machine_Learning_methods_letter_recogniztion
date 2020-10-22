@@ -13,6 +13,9 @@
 
     ## Warning: package 'gbm' was built under R version 3.6.2
 
+    library(GGally)
+    library(MASS)
+
 1.1 Simple Intro on is “B”
 --------------------------
 
@@ -43,20 +46,20 @@ set
 
     ## 
     ## FALSE  TRUE 
-    ##  1515   510
+    ##  1526   499
 
     Accuracy = sum(Letters.train$isB == FALSE) / nrow(Letters.train)
     table(Letters.test$isB)
 
     ## 
     ## FALSE  TRUE 
-    ##   835   256
+    ##   824   267
 
     Base_Accuracy = sum(Letters.test$isB == FALSE) / nrow(Letters.test)
 
     paste("The Accuracy of the baseline model:", Base_Accuracy) 
 
-    ## [1] "The Accuracy of the baseline model: 0.765352887259395"
+    ## [1] "The Accuracy of the baseline model: 0.755270394133822"
 
 #### 1 ii) Logistic Regression
 
@@ -74,35 +77,35 @@ is set at $ p = 0.5$
     ## 
     ## Deviance Residuals: 
     ##     Min       1Q   Median       3Q      Max  
-    ## -3.2383  -0.1493  -0.0165   0.0217   3.6970  
+    ## -3.4033  -0.1515  -0.0182   0.0000   3.5348  
     ## 
     ## Coefficients:
     ##              Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept) -16.25619    2.60528  -6.240 4.38e-10 ***
-    ## xbox          0.07562    0.12502   0.605  0.54526    
-    ## ybox         -0.02671    0.08666  -0.308  0.75794    
-    ## width        -1.18786    0.15354  -7.737 1.02e-14 ***
-    ## height       -0.77635    0.14207  -5.465 4.64e-08 ***
-    ## onpix         0.99704    0.13728   7.263 3.79e-13 ***
-    ## xbar          0.60824    0.13196   4.609 4.04e-06 ***
-    ## ybar         -0.62184    0.12437  -5.000 5.74e-07 ***
-    ## x2bar        -0.40789    0.09513  -4.287 1.81e-05 ***
-    ## y2bar         1.43810    0.13275  10.833  < 2e-16 ***
-    ## xybar         0.29993    0.09429   3.181  0.00147 ** 
-    ## x2ybar        0.64532    0.12952   4.982 6.29e-07 ***
-    ## xy2bar       -0.35337    0.11121  -3.178  0.00148 ** 
-    ## xedge        -0.25838    0.09329  -2.770  0.00561 ** 
-    ## xedgeycor     0.09464    0.10054   0.941  0.34656    
-    ## yedge         1.70070    0.12569  13.531  < 2e-16 ***
-    ## yedgexcor     0.35546    0.07378   4.818 1.45e-06 ***
+    ## (Intercept) -11.87452    2.45584  -4.835 1.33e-06 ***
+    ## xbox          0.05691    0.12539   0.454 0.649951    
+    ## ybox          0.13242    0.08658   1.530 0.126140    
+    ## width        -1.15004    0.15626  -7.360 1.84e-13 ***
+    ## height       -0.83729    0.14550  -5.754 8.69e-09 ***
+    ## onpix         0.89868    0.13650   6.584 4.58e-11 ***
+    ## xbar          0.63528    0.13056   4.866 1.14e-06 ***
+    ## ybar         -0.71092    0.12266  -5.796 6.79e-09 ***
+    ## x2bar        -0.37972    0.09455  -4.016 5.92e-05 ***
+    ## y2bar         1.35729    0.12619  10.756  < 2e-16 ***
+    ## xybar         0.13621    0.09180   1.484 0.137856    
+    ## x2ybar        0.52199    0.12519   4.170 3.05e-05 ***
+    ## xy2bar       -0.60928    0.10986  -5.546 2.92e-08 ***
+    ## xedge        -0.32815    0.09556  -3.434 0.000594 ***
+    ## xedgeycor     0.08840    0.10334   0.855 0.392295    
+    ## yedge         1.76508    0.13098  13.476  < 2e-16 ***
+    ## yedgexcor     0.30845    0.07269   4.243 2.20e-05 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## (Dispersion parameter for binomial family taken to be 1)
     ## 
-    ##     Null deviance: 2285.66  on 2024  degrees of freedom
-    ## Residual deviance:  633.34  on 2008  degrees of freedom
-    ## AIC: 667.34
+    ##     Null deviance: 2261.39  on 2024  degrees of freedom
+    ## Residual deviance:  627.72  on 2008  degrees of freedom
+    ## AIC: 661.72
     ## 
     ## Number of Fisher Scoring iterations: 8
 
@@ -116,13 +119,13 @@ is set at $ p = 0.5$
 
     ##        pisB
     ##         FALSE TRUE
-    ##   FALSE   809   26
-    ##   TRUE     38  218
+    ##   FALSE   788   36
+    ##   TRUE     39  228
 
     log_accuracy = (confusion_m[1] + confusion_m[4])/sum(confusion_m)
     paste("The Accuracy of the logistic regression model:", log_accuracy)
 
-    ## [1] "The Accuracy of the logistic regression model: 0.941338221814849"
+    ## [1] "The Accuracy of the logistic regression model: 0.931255728689276"
 
 We also calculate the AUC of the model
 
@@ -137,7 +140,7 @@ We also calculate the AUC of the model
     # AUC
     paste("As calulated, AUC = ",as.numeric(performance(rocr.log.pred, "auc")@y.values))
 
-    ## [1] "As calulated, AUC =  0.976305202095809"
+    ## [1] "As calulated, AUC =  0.976769026580852"
 
 #### 1 iii) CART Model to predict “isB”
 
@@ -165,13 +168,13 @@ the model.
 
     ##        pred_cart
     ##         FALSE TRUE
-    ##   FALSE   817   18
-    ##   TRUE     51  205
+    ##   FALSE   788   36
+    ##   TRUE     48  219
 
     cart_accuracy = (confusion_m[1] + confusion_m[4])/sum(confusion_m)
     paste("The Accuracy of the CART model:", cart_accuracy)
 
-    ## [1] "The Accuracy of the CART model: 0.936755270394134"
+    ## [1] "The Accuracy of the CART model: 0.923006416131989"
 
     # A cp vs Accuracy to help us on deciding cp
     ggplot(train.cart$results, aes(x=cp, y=Accuracy)) + geom_point(size=3) +
@@ -192,20 +195,125 @@ the model.
 
     ##        pred.rf
     ##         FALSE TRUE
-    ##   FALSE   828    7
-    ##   TRUE     18  238
+    ##   FALSE   813   11
+    ##   TRUE     15  252
 
     rf_accuracy = (confusion_m[1] + confusion_m[4])/sum(confusion_m)
     paste("The Accuracy of the Random Forest :", rf_accuracy)
 
-    ## [1] "The Accuracy of the Random Forest : 0.977085242896425"
+    ## [1] "The Accuracy of the Random Forest : 0.976168652612282"
 
 #### 1 v) Summary
 
     data.frame(Model = c("Baseline","Logistic Regression","CART","Random Forest"), Accuracy = c(Base_Accuracy, log_accuracy, cart_accuracy, rf_accuracy))
 
     ##                 Model  Accuracy
-    ## 1            Baseline 0.7653529
-    ## 2 Logistic Regression 0.9413382
-    ## 3                CART 0.9367553
-    ## 4       Random Forest 0.9770852
+    ## 1            Baseline 0.7552704
+    ## 2 Logistic Regression 0.9312557
+    ## 3                CART 0.9230064
+    ## 4       Random Forest 0.9761687
+
+2. Prediction on “A”, “B”, “P”, “R”
+-----------------------------------
+
+Now, let’s move on to a more general case: predicting a letter is one of
+“A”, “B”, “P”, “R”. It can be extended to the full 26 letters case, but
+this will inflate the model complexity and run time. For the sake of
+simplicity, we’ll run the demo of four letter case here.
+
+#### 2 i) Baseline Model
+
+    table(Letters.train$letter)
+
+    ## 
+    ##   A   B   P   R 
+    ## 494 499 541 491
+
+    table(Letters.test$letter)
+
+    ## 
+    ##   A   B   P   R 
+    ## 295 267 262 267
+
+    ## Since "A" appears most frequently in the training set, we'll always predict the "A" in the test set
+    Base_Accuracy = sum(Letters.test$letter == "A") / nrow(Letters.test)
+    paste("Baseline Model Accuracy = " ,Base_Accuracy) 
+
+    ## [1] "Baseline Model Accuracy =  0.270394133822181"
+
+#### 2 ii) LDA (Latent Dirichlet allocation)
+
+    LdaModel <- lda(letter ~ ., data=subset(Letters.train, select = c(-isB)))
+
+    predTestLDA <- predict(LdaModel, newdata = Letters.test)
+
+    confusion_m <- table(predTestLDA$class, Letters.test$letter)
+    confusion_m
+
+    ##    
+    ##       A   B   P   R
+    ##   A 269   0   0   0
+    ##   B   5 236   9  29
+    ##   P   5   0 248   0
+    ##   R  16  31   5 238
+
+    lda_accuracy = sum(predTestLDA$class == Letters.test$letter)/nrow(Letters.test)
+    paste("LDA Accuracy:" ,lda_accuracy)
+
+    ## [1] "LDA Accuracy: 0.908340971585701"
+
+#### 2 iii) CART
+
+    cpVals = data.frame(cp = seq(0, .001, by=.1))
+
+    train.cart_2 <- train(letter ~ .,
+                        data = subset(Letters.train, select=c(-isB) ),
+                        method = "rpart",
+                        tuneGrid = cpVals,
+                        trControl = trainControl(method = "cv", number=5),
+                        metric = "Accuracy")
+
+    train.cart_2
+
+    ## CART 
+    ## 
+    ## 2025 samples
+    ##   16 predictor
+    ##    4 classes: 'A', 'B', 'P', 'R' 
+    ## 
+    ## No pre-processing
+    ## Resampling: Cross-Validated (5 fold) 
+    ## Summary of sample sizes: 1619, 1621, 1620, 1620, 1620 
+    ## Resampling results:
+    ## 
+    ##   Accuracy   Kappa    
+    ##   0.8938379  0.8583647
+    ## 
+    ## Tuning parameter 'cp' was held constant at a value of 0
+
+    Letters.test.mm = as.data.frame(model.matrix(letter~.+0, data=Letters.test))
+
+    pred.cart <- predict(train.cart_2, newdata = Letters.test.mm, type="prob" )
+    pred.cart$results = colnames(pred.cart)[apply(pred.cart,1,which.max)]
+
+    confusion_m <- table(Letters.test$letter, pred.cart$results)
+    confusion_m
+
+    ##    
+    ##       A   B   P   R
+    ##   A 282   5   1   7
+    ##   B   2 226  10  29
+    ##   P   3   9 248   2
+    ##   R   4  22   6 235
+
+    cart_accuracy_2 = sum(Letters.test$letter == pred.cart$results)/(nrow(Letters.test))
+    paste("CART Accuracy" ,cart_accuracy_2)
+
+    ## [1] "CART Accuracy 0.908340971585701"
+
+    tree <- rpart(letter ~., data = Letters.train, method = "class")
+    rpart.plot(tree)
+
+![](letter_files/figure-markdown_strict/unnamed-chunk-15-1.png)
+
+#### iv Bagging of CART models
