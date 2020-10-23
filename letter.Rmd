@@ -9,7 +9,7 @@ output: md_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r, message=FALSE}
+```{r, message=FALSE,warning=FALSE}
 library(ggplot2)
 library(caTools)
 library(plotROC)
@@ -200,7 +200,74 @@ tree <- rpart(letter ~., data = Letters.train, method = "class")
 rpart.plot(tree)
 ```
 
-#### iv Bagging of CART models
+#### 2 iv) Bagging of CART models
+```{r}
+## fit the model
+train.letter.mm = as.data.frame(model.matrix(letter ~ . + 0, data = subset(Letters.train, select=c(-isB))))
+
+mod.bag <- randomForest(x = train.letter.mm, y = Letters.train$letter, mtry = 16)
+mod.bag
+```
+
+
+```{r}
+## display the result 
+Letters.test.mm = as.data.frame(model.matrix(letter~.+0, data=Letters.test))
+
+pred.bag <- predict(mod.bag, newdata = Letters.test.mm)
+
+confusion_m <- table(pred.bag, Letters.test$letter)
+confusion_m 
+
+bagging_accuract = sum(pred.bag == Letters.test$letter)/nrow(Letters.test)
+paste("Bagging of CART Accuracy: ", bagging_accuract)
+```
+
+#### 2 v) Random Forest 
+We use 5-fold cross validation to find the best entry of mtry
+```{r}
+mod.rf <- randomForest(letter ~ ., data = subset(Letters.train, select=c(-isB) ), mtry = 5)
+mod.rf
+
+pred.rf <- predict(mod.rf, newdata = Letters.test) 
+table(pred.rf, Letters.test$letter)
+rf_acc = sum(pred.rf == Letters.test$letter)/nrow(Letters.test)
+rf_acc
+```
+
+#### 2 vi) Gradient Boosting 
+```{r, message=FALSE}
+## fit the gradient boosting machine 
+mod.boost <- gbm(letter ~ .-isB + 0, 
+                 data = Letters.train,
+                 distribution = "multinomial",
+                 n.trees = 3300,
+                 interaction.depth = 10)
+
+mod.boost
+```
+
+
+```{r}
+pred.boost <- predict(mod.boost, newdata = subset(Letters.test, select=c(-isB)), type = "response",n.trees = 3300) 
+pred.boost <- apply(pred.boost, 1, which.max)
+pred.boost <- factor(pred.boost,levels = c(1,2,3,4),labels = c("A","B","P","R"))
+
+confusion_m <- table(pred.boost,Letters.test$letter)
+confusion_m
+
+gbm_acc = sum(pred.boost == Letters.test$letter)/nrow(Letters.test)
+
+paste("Gradient Boosting Accuracy: ", gbm_acc)
+```
+
+
+#### 2 vii) Summary on the methods we used for recognizing "A" "B" "P" "R
+```{r}
+data.frame(Model = c("Baseline","CART","CART Bagging","Random Forest","Gradient Boosting"), Accuracy = c(Base_Accuracy, cart_accuracy_2, bagging_accuract, rf_acc, gbm_acc))
+```
+
+A short summary to all the methods above, the Gradient boosting is giving the best performance comparing to others. Without other assumptions, GBM will be the model selected for further analysis on letter recognition. Random forest also have a good performance among other models, and a good thing of it is the time cost on training is much lower than boosting, whereas its test set accuracy is only 0.0027 lower.
 
 
 
